@@ -347,7 +347,7 @@ class InferenceTask:
         metadata = None
         frame_visualizer = Visualizer(rgb_img, metadata)
         overlaid_img = frame_visualizer.overlay_instances(
-            label_map=pred_label_img, id_to_class_name_map=self.id_to_class_name_map
+            label_map=pred_label_img, id_to_class_name_map=self.id_to_class_name_map, image_name=in_fname_stem
         )
         imageio.imwrite(output_demo_fpath, overlaid_img)
         imageio.imwrite(output_gray_fpath, pred_label_img)
@@ -474,7 +474,32 @@ class InferenceTask:
 
             batch_time.update(time.time() - end)
             end = time.time()
-            cv2.imwrite(gray_path, gray_img)
+            #cv2.imwrite(gray_path, gray_img)
+
+
+
+            # avoid blurry images by upsampling RGB before overlaying text
+            min_resolution = 1080
+            if np.amin(image.shape[:2]) < min_resolution:
+                image = resize_util.resize_img_by_short_side(image, min_resolution, "rgb")
+                gray_img = resize_util.resize_img_by_short_side(gray_img, min_resolution, "label")
+
+            metadata = None
+            frame_visualizer = Visualizer(image, metadata)
+            overlaid_img = frame_visualizer.overlay_instances(
+                label_map=gray_img, id_to_class_name_map=self.id_to_class_name_map, image_name = image_name
+            )
+            
+            out_path_overlaid = '/disk/vanishing_data/zl254/mseg-semantic_results/waymo/testing2'
+            if not os.path.isdir(out_path_overlaid):
+                os.makedirs(out_path_overlaid)
+            
+            out_path_overlaid_img = out_path_overlaid + '/' + '{}.jpg'.format(image_name)
+            
+            
+            #out_path_gray = '/fzi/ids/zl254/no_backup/mseg-semantic/temp_files/gray/{}.jpg'.format(image_name)
+            cv2.imwrite(out_path_overlaid_img, overlaid_img)
+            #cv2.imwrite(out_path_gray, gray_img)
 
             # todo: update to time remaining.
             if ((i + 1) % self.args.print_freq == 0) or (i + 1 == len(test_loader)):

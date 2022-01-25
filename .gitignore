@@ -2,8 +2,13 @@
 __pycache__/
 mseg_semantic.egg-info/*
 temp_files/*
+workspace.code-workspace
+.vscode/
 
 # OSX dir files
 *.DS_Store
 .DS_Store
 
+# .jpg and .png files
+*.jpg
+*.png
